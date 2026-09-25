@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Grok Training</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --orange: #f97316;
+      --yellow: #eab308;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+      line-height: 1.4;
+    }
+    header {
+      background: var(--card);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header .sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    nav {
+      display: flex;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+    }
+    nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 12px 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+    nav button.active { color: var(--accent); }
+    nav button span { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+    .page { display: none; padding: 16px; }
+    .page.active { display: block; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .card h2 { font-size: 1rem; margin-bottom: 12px; color: var(--accent); }
+    .stat-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .stat {
+      flex: 1;
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat .value { font-size: 1.5rem; font-weight: 700; }
+    .stat .label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+    button.btn {
+      background: var(--accent);
+      color: #0f172a;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      width: 100%;
+    }
+    button.btn.secondary { background: var(--border); color: var(--text); }
+    button.btn.green { background: var(--green); }
+    button.btn.small { padding: 8px 12px; font-size: 0.85rem; width: auto; }
+    .progress-bar {
+      height: 10px;
+      background: #0f172a;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 5px;
+      transition: width 0.3s;
+    }
+    .progress-bar .fill.orange { background: var(--orange); }
+    .progress-bar .fill.red { background: var(--red); }
+    .exercise {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+    .exercise h3 { font-size: 0.95rem; margin-bottom: 6px; }
+    .exercise .meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+    .set-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .set-row input { margin-bottom: 0; flex: 1; }
+    .set-row span { font-size: 0.8rem; color: var(--muted); min-width: 40px; }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #0f172a;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .empty { text-align: center; color: var(--muted); padding: 30px 10px; font-size: 0.9rem; }
+    .goal-inputs { display: flex; gap: 10px; }
+    .goal-inputs > div { flex: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grok Training</h1>
+    <div class="sub" id="header-sub">Phase 1 · Week 1</div>
+  </header>
+
+  <!-- TODAY PAGE -->
+  <div id="page-today" class="page active">
+    <div class="card">
+      <h2>Today</h2>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="value" id="today-weight">—</div>
+          <div class="label">Weight (kg)</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="today-protein">0</div>
+          <div class="label">Protein (g)</div>
+        </div>
+        <div class="stat">
+          <div class="value" id="today-cals">0</div>
+          <div class="label">Calories</div>
+        </div>
+      </div>
+      <div id="protein-progress-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted)">
+          <span>Protein</span>
+          <span id="protein-goal-text">0 / 200g</span>
+        </div>
+        <div class="progress-bar"><div class="fill" id="protein-fill" style="width:0%"></div></div>
+      </div>
+      <div id="cals-progress-wrap" style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--muted)">
+          <span>Calories</span>
+          <span id="cals-goal-text">0 / 2200</span>
+        </div>
+        <div class="progress-bar"><div class="fill orange" id="cals-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Today’s Workout</h2>
+      <div id="today-workout-info" style="margin-bottom:12px;font-size:0.9rem;color:var(--muted)"></div>
+      <div id="today-exercises"></div>
+      <button class="btn green" id="btn-complete-workout" style="margin-top:8px;display:none">Mark Workout Complete</button>
+    </div>
+  </div>
+
+  <!-- WORKOUT PAGE -->
+  <div id="page-workout" class="page">
+    <div class="card">
+      <h2>Select Day</h2>
+      <select id="select-week">
+        <option value="1">Week 1 (Phase 1)</option>
+        <option value="2">Week 2 (Phase 1)</option>
+        <option value="3">Week 3 (Phase 2)</option>
+        <option value="4">Week 4 (Phase 2)</option>
+      </select>
+      <select id="select-day">
+        <option value="1">Day 1 – Chest & Triceps</option>
+        <option value="2">Day 2 – Legs, Calves & Abs</option>
+        <option value="3">Day 3 – Shoulders & Traps</option>
+        <option value="4">Day 4 – Back, Biceps & Abs</option>
+      </select>
+      <button class="btn" id="btn-load-workout">Load Workout</button>
+    </div>
+    <div id="workout-detail"></div>
+  </div>
+
+  <!-- LOG PAGE (Protein + Calories + Weight) -->
+  <div id="page-log" class="page">
+    <div class="card">
+      <h2>Log Weight</h2>
+      <label>Weight (kg)</label>
+      <input type="number" id="input-weight" step="0.1" placeholder="e.g. 89.5" />
+      <button class="btn" id="btn-save-weight">Save Weight</button>
+    </div>
+
+    <div class="card">
+      <h2>Log Meal / Protein & Calories</h2>
+      <label>Meal name / description</label>
+      <input type="text" id="input-meal" placeholder="e.g. Steak & eggs" />
+      <div class="goal-inputs">
+        <div>
+          <label>Protein (g)</label>
+          <input type="number" id="input-protein" placeholder="60" />
+        </div>
+        <div>
+          <label>Calories</label>
+          <input type="number" id="input-calories" placeholder="500" />
+        </div>
+      </div>
+      <button class="btn green" id="btn-save-meal">Add Meal</button>
+    </div>
+
+    <div class="card">
+      <h2>Today’s Meals</h2>
+      <div id="meals-list"></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS PAGE -->
+  <div id="page-progress" class="page">
+    <div class="card">
+      <h2>Goals</h2>
+      <div class="goal-inputs">
+        <div>
+          <label>Daily Protein Goal (g)</label>
+          <input type="number" id="goal-protein" value="200" />
+        </div>
+        <div>
+          <label>Daily Calorie Goal</label>
+          <input type="number" id="goal-calories" value="2200" />
+        </div>
+      </div>
+      <button class="btn secondary" id="btn-save-goals">Save Goals</button>
+    </div>
+
+    <div class="card">
+      <h2>Weight History</h2>
+      <div id="weight-history"></div>
+    </div>
+
+    <div class="card">
+      <h2>Recent Protein / Calories</h2>
+      <div id="nutrition-history"></div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="active" data-page="today"><span>🏠</span>Today</button>
+    <button data-page="workout"><span>💪</span>Workout</button>
+    <button data-page="log"><span>📝</span>Log</button>
+    <button data-page="progress"><span>📊</span>Progress</button>
+  </nav>
+
+  <script>
+    // ========== PRELOADED WORKOUTS ==========
+    const PROGRAM = {
+      1: { // Phase 1
+        name: "Phase 1 – Strength Base",
+        days: {
+          1: {
+            title: "Day 1 – Chest & Triceps",
+            exercises: [
+              { name: "Reverse Grip Bench Press", sets: 4, reps: "6-8" },
+              { name: "V-Bar DB Chest Press", sets: 4, reps: "6-8" },
+              { name: "2x DB Pullover into Chest Press", sets: 4, reps: "6-8" },
+              { name: "Close Grip Bench Press", sets: 4, reps: "6-8" },
+              { name: "Lying Tricep Zottman Curls", sets: 3, reps: "8-10" },
+              { name: "Lat Machine Tricep Pulldown", sets: 3, reps: "8-10" }
+            ]
+          },
+          2: {
+            title: "Day 2 – Legs, Calves & Abs",
+            exercises: [
+              { name: "Barbell Squat", sets: 3, reps: "6-8" },
+              { name: "Leg Press", sets: 4, reps: "6-8" },
+              { name: "Romanian Deadlift", sets: 4, reps: "6-8" },
+              { name: "Standing Calf Raise", sets: 3, reps: "20" },
+              { name: "Leg Curl Machine (Lower Abs)", sets: 3, reps: "15-20" },
+              { name: "Barbell Plate Lying Side Twists", sets: 3, reps: "15/side" }
+            ]
+          },
+          3: {
+            title: "Day 3 – Shoulders & Traps",
+            exercises: [
+              { name: "Straight Arm Shoulder Raises", sets: 4, reps: "6-8" },
+              { name: "Arnold Press", sets: 4, reps: "6-8" },
+              { name: "Barbell Upright Row", sets: 4, reps: "6-8" },
+              { name: "Shrugs", sets: 3, reps: "6-8" }
+            ]
+          },
+          4: {
+            title: "Day 4 – Back, Biceps & Abs",
+            exercises: [
+              { name: "Barbell Deadlift", sets: 3, reps: "6-8" },
+              { name: "Barbell Bent-Over Row", sets: 4, reps: "6-8" },
+              { name: "Spider Curls", sets: 4, reps: "12-15" },
+              { name: "DB Preacher Curls (Pinkie Inwards)", sets: 3, reps: "8-10" },
+              { name: "DB Hammer Concentration Curls", sets: 3, reps: "8-10" },
+              { name: "Seated Zottman Curls", sets: 3, reps: "8-10" }
+            ]
+          }
+        }
+      },
+      2: { // Phase 1 continued
+        name: "Phase 1 – Strength Base",
+        days: {
+          1: {
+            title: "Day 1 – Chest & Triceps",
+            exercises: [
+              { name: "Reverse Grip Bench Press", sets: 4, reps: "6-8" },
+              { name: "V-Bar DB Chest Press", sets: 4, reps: "6-8" },
+              { name: "2x DB Pullover into Chest Press", sets: 4, reps: "6-8" },
+              { name: "Close Grip Bench Press", sets: 4, reps: "6-8" },
+              { name: "Lying Tricep Zottman Curls", sets: 3, reps: "8-10" },
+              { name: "Lat Machine Tricep Pulldown", sets: 3, reps: "8-10" }
+            ]
+          },
+          2: {
+            title: "Day 2 – Legs, Calves & Abs",
+            exercises: [
+              { name: "Barbell Squat", sets: 3, reps: "6-8" },
+              { name: "Leg Press", sets: 4, reps: "6-8" },
+              { name: "Romanian Deadlift", sets: 4, reps: "6-8" },
+              { name: "Standing Calf Raise", sets: 3, reps: "20" },
+              { name: "Leg Curl Machine (Lower Abs)", sets: 3, reps: "15-20" },
+              { name: "Barbell Plate Lying Side Twists", sets: 3, reps: "15/side" }
+            ]
+          },
+          3: {
+            title: "Day 3 – Shoulders & Traps",
+            exercises: [
+              { name: "Straight Arm Shoulder Raises", sets: 4, reps: "6-8" },
+              { name: "Arnold Press", sets: 4, reps: "6-8" },
+              { name: "Barbell Upright Row", sets: 4, reps: "6-8" },
+              { name: "Shrugs", sets: 3, reps: "6-8" }
+            ]
+          },
+          4: {
+            title: "Day 4 – Back, Biceps & Abs",
+            exercises: [
+              { name: "Barbell Deadlift", sets: 3, reps: "6-8" },
+              { name: "Barbell Bent-Over Row", sets: 4, reps: "6-8" },
+              { name: "Spider Curls", sets: 4, reps: "12-15" },
+              { name: "DB Preacher Curls (Pinkie Inwards)", sets: 3, reps: "8-10" },
+              { name: "DB Hammer Concentration Curls", sets: 3, reps: "8-10" },
+              { name: "Seated Zottman Curls", sets: 3, reps: "8-10" }
+            ]
+          }
+        }
+      },
+      3: { // Phase 2
+        name: "Phase 2 – Hypertrophy",
+        days: {
+          1: {
+            title: "Day 1 – Chest & Triceps",
+            exercises: [
+              { name: "Reverse Grip Bench Press", sets: 4, reps: "10-12" },
+              { name: "V-Bar DB Chest Press", sets: 4, reps: "10-12" },
+              { name: "2x DB Pullover into Chest Press", sets: 4, reps: "10-12" },
+              { name: "Close Grip Bench Press", sets: 4, reps: "10-12" },
+              { name: "Lying Tricep Zottman Curls", sets: 3, reps: "10-12" },
+              { name: "Tricep Pressdown (Elbows 180°)", sets: 3, reps: "10-12" },
+              { name: "Close Grip Cable Tricep Pressdown", sets: 3, reps: "10-12" }
+            ]
+          },
+          2: {
+            title: "Day 2 – Legs, Calves & Abs",
+            exercises: [
+              { name: "Barbell Squat", sets: 3, reps: "10-12" },
+              { name: "Leg Press", sets: 4, reps: "10-12" },
+              { name: "Romanian Deadlift", sets: 4, reps: "10-12" },
+              { name: "Standing Calf Raise", sets: 3, reps: "20" },
+              { name: "Leg Curl Machine (Lower Abs)", sets: 3, reps: "15-20" },
+              { name: "Barbell Plate Lying Side Twists", sets: 3, reps: "15/side" }
+            ]
+          },
+          3: {
+            title: "Day 3 – Shoulders & Traps",
+            exercises: [
+              { name: "Straight Arm Shoulder Raises", sets: 4, reps: "10-12" },
+              { name: "Arnold Press", sets: 4, reps: "10-12" },
+              { name: "Barbell Upright Row", sets: 4, reps: "10-12" },
+              { name: "Shrugs", sets: 3, reps: "10-12" }
+            ]
+          },
+          4: {
+            title: "Day 4 – Back, Biceps & Abs (Week 3 Arms)",
+            exercises: [
+              { name: "Barbell Deadlift", sets: 3, reps: "10-12" },
+              { name: "Barbell Bent-Over Row", sets: 4, reps: "10-12" },
+              { name: "Cross Body Hammer Curls", sets: 4, reps: "10-12" },
+              { name: "DB Hammer Concentration Curls", sets: 3, reps: "10-12" },
+              { name: "Preacher Open-Palmed DB Curls", sets: 3, reps: "10-12" },
+              { name: "Cable Drag Curl into Full Curl", sets: 3, reps: "10-12" }
+            ]
+          }
+        }
+      },
+      4: {
+        name: "Phase 2 – Hypertrophy",
+        days: {
+          1: {
+            title: "Day 1 – Chest & Triceps",
+            exercises: [
+              { name: "Reverse Grip Bench Press", sets: 4, reps: "10-12" },
+              { name: "V-Bar DB Chest Press", sets: 4, reps: "10-12" },
+              { name: "2x DB Pullover into Chest Press", sets: 4, reps: "10-12" },
+              { name: "Close Grip Bench Press", sets: 4, reps: "10-12" },
+              { name: "Lying Tricep Zottman Curls", sets: 3, reps: "10-12" },
+              { name: "Tricep Pressdown (Elbows 180°)", sets: 3, reps: "10-12" },
+              { name: "Close Grip Cable Tricep Pressdown", sets: 3, reps: "10-12" }
+            ]
+          },
+          2: {
+            title: "Day 2 – Legs, Calves & Abs",
+            exercises: [
+              { name: "Barbell Squat", sets: 3, reps: "10-12" },
+              { name: "Leg Press", sets: 4, reps: "10-12" },
+              { name: "Romanian Deadlift", sets: 4, reps: "10-12" },
+              { name: "Standing Calf Raise", sets: 3, reps: "20" },
+              { name: "Leg Curl Machine (Lower Abs)", sets: 3, reps: "15-20" },
+              { name: "Barbell Plate Lying Side Twists", sets: 3, reps: "15/side" }
+            ]
+          },
+          3: {
+            title: "Day 3 – Shoulders & Traps",
+            exercises: [
+              { name: "Straight Arm Shoulder Raises", sets: 4, reps: "10-12" },
+              { name: "Arnold Press", sets: 4, reps: "10-12" },
+              { name: "Barbell Upright Row", sets: 4, reps: "10-12" },
+              { name: "Shrugs", sets: 3, reps: "10-12" }
+            ]
+          },
+          4: {
+            title: "Day 4 – Back, Biceps & Abs (Week 4 Arms)",
+            exercises: [
+              { name: "Barbell Deadlift", sets: 3, reps: "10-12" },
+              { name: "Barbell Bent-Over Row", sets: 4, reps: "10-12" },
+              { name: "Drag Curls", sets: 4, reps: "10-12" },
+              { name: "DB Hammer Concentration Curls", sets: 3, reps: "10-12" },
+              { name: "One-Arm Bicep Pulldown", sets: 3, reps: "10-12" },
+              { name: "Leaning Against the Wall Curls", sets: 3, reps: "10-12" }
+            ]
+          }
+        }
+      }
+    };
+
+    // ========== DATA HELPERS ==========
+    const today = () => new Date().toISOString().slice(0, 10);
+
+    function loadData() {
+      const raw = localStorage.getItem("grokAppData");
+      return raw ? JSON.parse(raw) : {
+        weights: [],
+        meals: [],
+        workouts: {},
+        goals: { protein: 200, calories: 2200 },
+        currentWeek: 1,
+        currentDay: 1
+      };
+    }
+
+    function saveData(data) {
+      localStorage.setItem("grokAppData", JSON.stringify(data));
+    }
+
+    let data = loadData();
+
+    // ========== UI HELPERS ==========
+    function showPage(name) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById("page-" + name).classList.add("active");
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      document.querySelector(`nav button[data-page="${name}"]`).classList.add("active");
+      if (name === "today") renderToday();
+      if (name === "log") renderMeals();
+      if (name === "progress") renderProgress();
+    }
+
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.addEventListener("click", () => showPage(btn.dataset.page));
+    });
+
+    // ========== TODAY ==========
+    function renderToday() {
+      const t = today();
+      const weightEntry = data.weights.find(w => w.date === t);
+      document.getElementById("today-weight").textContent = weightEntry ? weightEntry.kg : "—";
+
+      const todayMeals = data.meals.filter(m => m.date === t);
+      const totalP = todayMeals.reduce((s, m) => s + (m.protein || 0), 0);
+      const totalC = todayMeals.reduce((s, m) => s + (m.calories || 0), 0);
+
+      document.getElementById("today-protein").textContent = totalP;
+      document.getElementById("today-cals").textContent = totalC;
+
+      const pGoal = data.goals.protein || 200;
+      const cGoal = data.goals.calories || 2200;
+      document.getElementById("protein-goal-text").textContent = `${totalP} / ${pGoal}g`;
+      document.getElementById("cals-goal-text").textContent = `${totalC} / ${cGoal}`;
+
+      const pPct = Math.min(100, (totalP / pGoal) * 100);
+      const cPct = Math.min(100, (totalC / cGoal) * 100);
+      document.getElementById("protein-fill").style.width = pPct + "%";
+      document.getElementById("cals-fill").style.width = cPct + "%";
+
+      // Workout for today (simple: use current selection or default Day 1)
+      const week = data.currentWeek || 1;
+      const day = data.currentDay || 1;
+      const prog = PROGRAM[week];
+      const dayData = prog.days[day];
+      document.getElementById("header-sub").textContent = `${prog.name} · Week ${week}`;
+      document.getElementById("today-workout-info").textContent = dayData.title;
+
+      const container = document.getElementById("today-exercises");
+      container.innerHTML = "";
+      dayData.exercises.forEach((ex, idx) => {
+        const div = document.createElement("div");
+        div.className = "exercise";
+        div.innerHTML = `
+          <h3>${ex.name}</h3>
+          <div class="meta">${ex.sets} sets × ${ex.reps} reps</div>
+          <div class="set-row">
+            <span>Log:</span>
+            <input type="number" placeholder="kg" class="log-weight" data-ex="${idx}" />
+            <input type="number" placeholder="reps" class="log-reps" data-ex="${idx}" />
+            <button class="btn small" onclick="logSet(${week},${day},${idx})">+</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.logSet = function(week, day, exIdx) {
+      const inputs = document.querySelectorAll(`.log-weight[data-ex="${exIdx}"], .log-reps[data-ex="${exIdx}"]`);
+      // simple feedback
+      alert("Set logged (saved locally). Full history coming in next update.");
+    };
+
+    // ========== WORKOUT PAGE ==========
+    document.getElementById("btn-load-workout").addEventListener("click", () => {
+      const week = parseInt(document.getElementById("select-week").value);
+      const day = parseInt(document.getElementById("select-day").value);
+      data.currentWeek = week;
+      data.currentDay = day;
+      saveData(data);
+
+      const prog = PROGRAM[week];
+      const dayData = prog.days[day];
+      const container = document.getElementById("workout-detail");
+      container.innerHTML = `
+        <div class="card">
+          <h2>${dayData.title}</h2>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:12px">${prog.name} · Week ${week}</p>
+          ${dayData.exercises.map(ex => `
+            <div class="exercise">
+              <h3>${ex.name}</h3>
+              <div class="meta">${ex.sets} sets × ${ex.reps} reps</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      renderToday();
+    });
+
+    // ========== LOG PAGE ==========
+    document.getElementById("btn-save-weight").addEventListener("click", () => {
+      const kg = parseFloat(document.getElementById("input-weight").value);
+      if (!kg) return alert("Enter a weight");
+      const t = today();
+      data.weights = data.weights.filter(w => w.date !== t);
+      data.weights.push({ date: t, kg });
+      data.weights.sort((a, b) => a.date.localeCompare(b.date));
+      saveData(data);
+      document.getElementById("input-weight").value = "";
+      renderToday();
+      alert("Weight saved!");
+    });
+
+    document.getElementById("btn-save-meal").addEventListener("click", () => {
+      const meal = document.getElementById("input-meal").value.trim() || "Meal";
+      const protein = parseFloat(document.getElementById("input-protein").value) || 0;
+      const calories = parseFloat(document.getElementById("input-calories").value) || 0;
+      if (!protein && !calories) return alert("Enter protein or calories");
+      data.meals.push({
+        date: today(),
+        meal,
+        protein,
+        calories,
+        id: Date.now()
+      });
+      saveData(data);
+      document.getElementById("input-meal").value = "";
+      document.getElementById("input-protein").value = "";
+      document.getElementById("input-calories").value = "";
+      renderMeals();
+      renderToday();
+    });
+
+    function renderMeals() {
+      const t = today();
+      const list = data.meals.filter(m => m.date === t);
+      const el = document.getElementById("meals-list");
+      if (!list.length) {
+        el.innerHTML = '<div class="empty">No meals logged today</div>';
+        return;
+      }
+      el.innerHTML = list.map(m => `
+        <div class="history-item">
+          <div>
+            <strong>${m.meal}</strong><br>
+            <span style="color:var(--muted);font-size:0.8rem">${m.protein}g protein · ${m.calories} kcal</span>
+          </div>
+          <button class="btn small secondary" onclick="deleteMeal(${m.id})">✕</button>
+        </div>
+      `).join("");
+    }
+
+    window.deleteMeal = function(id) {
+      data.meals = data.meals.filter(m => m.id !== id);
+      saveData(data);
+      renderMeals();
+      renderToday();
+    };
+
+    // ========== PROGRESS ==========
+    document.getElementById("btn-save-goals").addEventListener("click", () => {
+      data.goals.protein = parseInt(document.getElementById("goal-protein").value) || 200;
+      data.goals.calories = parseInt(document.getElementById("goal-calories").value) || 2200;
+      saveData(data);
+      renderToday();
+      alert("Goals saved");
+    });
+
+    function renderProgress() {
+      document.getElementById("goal-protein").value = data.goals.protein || 200;
+      document.getElementById("goal-calories").value = data.goals.calories || 2200;
+
+      const wEl = document.getElementById("weight-history");
+      if (!data.weights.length) {
+        wEl.innerHTML = '<div class="empty">No weight entries yet</div>';
+      } else {
+        wEl.innerHTML = data.weights.slice().reverse().slice(0, 15).map(w => `
+          <div class="history-item">
+            <span>${w.date}</span>
+            <strong>${w.kg} kg</strong>
+          </div>
+        `).join("");
+      }
+
+      // Simple daily totals for nutrition
+      const byDate = {};
+      data.meals.forEach(m => {
+        if (!byDate[m.date]) byDate[m.date] = { protein: 0, calories: 0 };
+        byDate[m.date].protein += m.protein || 0;
+        byDate[m.date].calories += m.calories || 0;
+      });
+      const dates = Object.keys(byDate).sort().reverse().slice(0, 10);
+      const nEl = document.getElementById("nutrition-history");
+      if (!dates.length) {
+        nEl.innerHTML = '<div class="empty">No nutrition data yet</div>';
+      } else {
+        nEl.innerHTML = dates.map(d => `
+          <div class="history-item">
+            <span>${d}</span>
+            <span>${byDate[d].protein}g P · ${byDate[d].calories} kcal</span>
+          </div>
+        `).join("");
+      }
+    }
+
+    // Init
+    renderToday();
+    // Service worker for basic offline (optional)
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
