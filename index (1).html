@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Trainer</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #0a0a0a; --card: #141414; --border: #2a2a2a; --text: #f5f5f5;
+      --muted: #a0a0a0; --accent: #00e5ff; --green: #00e676; --orange: #ffab00; --purple: #b388ff;
+    }
+    body.high-contrast {
+      --bg: #000; --card: #000; --border: #fff; --text: #fff;
+      --muted: #ccc; --accent: #ff0; --green: #0f0; --orange: #fa0; --purple: #f0f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 90px; line-height: 1.45; }
+    header { background: var(--card); padding: 12px 16px; border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.15rem; font-weight: 700; }
+    header .sub { font-size: 0.7rem; color: var(--muted); }
+    .toggle-hc { background: var(--border); color: var(--text); border: 1px solid var(--text); border-radius: 6px; padding: 5px 9px; font-size: 0.7rem; cursor: pointer; }
+    nav { display: flex; background: var(--card); border-top: 2px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; overflow-x: auto; }
+    nav button { flex: 1; min-width: 54px; background: none; border: none; color: var(--muted); padding: 9px 3px; font-size: 0.58rem; cursor: pointer; }
+    nav button.active { color: var(--accent); }
+    nav button span { display: block; font-size: 1.15rem; margin-bottom: 1px; }
+    .page { display: none; padding: 12px; }
+    .page.active { display: block; }
+    .card { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .card h2 { font-size: 0.9rem; margin-bottom: 8px; color: var(--accent); }
+    .stat-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .stat { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
+    .stat .value { font-size: 1.15rem; font-weight: 700; }
+    .stat .label { font-size: 0.58rem; color: var(--muted); margin-top: 1px; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 3px; }
+    input, select { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 9px 10px; color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
+    button.btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 11px 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 3px; }
+    button.btn.secondary { background: var(--border); color: var(--text); }
+    button.btn.green { background: var(--green); color: #000; }
+    button.btn.small { padding: 7px 10px; font-size: 0.8rem; width: auto; }
+    button.btn.outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+    .progress-bar { height: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; margin: 5px 0; }
+    .progress-bar .fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.3s; }
+    .staple { background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .staple h3 { font-size: 0.9rem; margin-bottom: 3px; }
+    .staple .macros { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
+    .quote { font-style: italic; font-size: 0.9rem; line-height: 1.45; border-left: 3px solid var(--accent); padding-left: 10px; margin: 8px 0; }
+    .quote-author { font-size: 0.75rem; color: var(--muted); }
+    .principle { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 9px; margin-bottom: 7px; font-size: 0.85rem; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .history-item:last-child { border-bottom: none; }
+    .empty { text-align: center; color: var(--muted); padding: 20px 8px; font-size: 0.85rem; }
+    .refeed-banner { background: var(--orange); color: #000; font-weight: 700; text-align: center; padding: 8px; border-radius: 7px; margin-bottom: 10px; font-size: 0.85rem; }
+    .quest { background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .quest.done { border-color: var(--green); opacity: 0.85; }
+    .quest-info { flex: 1; }
+    .quest-title { font-weight: 600; font-size: 0.9rem; }
+    .quest-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .exercise { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .exercise h3 { font-size: 0.9rem; margin-bottom: 4px; }
+    .exercise .meta { font-size: 0.75rem; color: var(--muted); }
+    .level-bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .level-bar .fill { height: 100%; background: var(--purple); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Trainer</h1>
+      <div class="sub" id="header-sub">Level <span id="user-level">1</span> · <span id="user-points">0</span> pts</div>
+    </div>
+    <button class="toggle-hc" id="btn-hc">High Contrast</button>
+  </header>
+
+  <!-- TODAY -->
+  <div id="page-today" class="page active">
+    <div class="card">
+      <h2>Today</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="value" id="today-weight">—</div><div class="label">Weight</div></div>
+        <div class="stat"><div class="value" id="today-protein">0</div><div class="label">Protein</div></div>
+        <div class="stat"><div class="value" id="today-cals">0</div><div class="label">Cals</div></div>
+        <div class="stat"><div class="value" id="today-points">0</div><div class="label">Points</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted)"><span>Protein</span><span id="protein-goal-text">0 / 200g</span></div>
+      <div class="progress-bar"><div class="fill" id="protein-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Daily Quests</h2>
+      <div class="quest" id="quest-walk">
+        <div class="quest-info">
+          <div class="quest-title">Morning Sweat-Suit Walk</div>
+          <div class="quest-meta">06:30–08:30 · +15 pts (+10 bonus)</div>
+        </div>
+        <button class="btn small green" onclick="completeQuest('walk')">Done</button>
+      </div>
+      <div class="quest" id="quest-train">
+        <div class="quest-info">
+          <div class="quest-title">Training Session</div>
+          <div class="quest-meta">10:00–14:00 ideal · +25 pts (+10 bonus)</div>
+        </div>
+        <button class="btn small green" onclick="completeQuest('train')">Done</button>
+      </div>
+      <div class="quest" id="quest-meal1">
+        <div class="quest-info">
+          <div class="quest-title">Gironda Meal 1</div>
+          <div class="quest-meta">11:00–13:00 · +20 pts (+5 bonus)</div>
+        </div>
+        <button class="btn small green" onclick="addStaple('gironda1', true)">Log</button>
+      </div>
+      <div class="quest" id="quest-meal2">
+        <div class="quest-info">
+          <div class="quest-title">Gironda Meal 2</div>
+          <div class="quest-meta">17:00–19:30 · +20 pts (+5 bonus)</div>
+        </div>
+        <button class="btn small green" onclick="addStaple('gironda2', true)">Log</button>
+      </div>
+      <div class="quest" id="quest-sleep">
+        <div class="quest-info">
+          <div class="quest-title">Log Sleep Quality</div>
+          <div class="quest-meta">+10–25 pts based on score</div>
+        </div>
+        <button class="btn small" onclick="showPage('sleep')">Go</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Stoic Quote</h2>
+      <div class="quote" id="stoic-quote"></div>
+      <div class="quote-author" id="stoic-author"></div>
+    </div>
+  </div>
+
+  <!-- WORKOUT -->
+  <div id="page-workout" class="page">
+    <div class="card">
+      <h2>Select Program</h2>
+      <select id="select-program">
+        <option value="current">Current 4-Week Program</option>
+        <option value="mentzer">Mike Mentzer Heavy Duty</option>
+      </select>
+      <div id="mentzer-select" style="display:none">
+        <select id="select-mentzer-day">
+          <option value="A">Day A – Chest / Back / Delts</option>
+          <option value="B">Day B – Legs / Arms</option>
+        </select>
+      </div>
+      <div id="current-select">
+        <select id="select-week">
+          <option value="1">Week 1</option>
+          <option value="2">Week 2</option>
+          <option value="3">Week 3</option>
+          <option value="4">Week 4</option>
+        </select>
+        <select id="select-day">
+          <option value="1">Day 1 – Chest & Triceps</option>
+          <option value="2">Day 2 – Legs</option>
+          <option value="3">Day 3 – Shoulders</option>
+          <option value="4">Day 4 – Back & Biceps</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-load-workout">Load Workout</button>
+    </div>
+    <div id="workout-detail"></div>
+  </div>
+
+  <!-- NUTRITION -->
+  <div id="page-nutrition" class="page">
+    <div class="card">
+      <h2>Vince Gironda – Maximum Definition</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">2 meals · Meat + Eggs · Refeed every 4–5 days</p>
+      <div id="refeed-status"></div>
+      <div class="staple">
+        <h3>Meal 1 – 6 Eggs + 3 Pork Patties</h3>
+        <div class="macros">933 kcal · 77P · 66F · 4C</div>
+        <button class="btn green" onclick="addStaple('gironda1')">+ Log Meal 1</button>
+      </div>
+      <div class="staple">
+        <h3>Meal 2 – 6 Eggs + 250g Steak</h3>
+        <div class="macros">952 kcal · 93P · 61F · 2.5C</div>
+        <button class="btn green" onclick="addStaple('gironda2')">+ Log Meal 2</button>
+      </div>
+      <button class="btn outline" onclick="markRefeed()">Mark Carb Refeed</button>
+    </div>
+
+    <div class="card">
+      <h2>Mike Dolce Style Meals</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">Clean, structured, fat-loss focused</p>
+      <div class="staple">
+        <h3>Breakfast – Protein + Veg</h3>
+        <div class="macros">Egg whites / whole eggs + spinach / peppers · ~35–45g protein</div>
+        <button class="btn green" onclick="addDolce('breakfast')">+ Log Breakfast</button>
+      </div>
+      <div class="staple">
+        <h3>Lunch – Lean Protein + Greens</h3>
+        <div class="macros">Chicken / turkey / white fish + large salad · ~40–50g protein</div>
+        <button class="btn green" onclick="addDolce('lunch')">+ Log Lunch</button>
+      </div>
+      <div class="staple">
+        <h3>Dinner – Protein + Veg</h3>
+        <div class="macros">Steak / chicken / fish + broccoli / greens · ~40–55g protein</div>
+        <button class="btn green" onclick="addDolce('dinner')">+ Log Dinner</button>
+      </div>
+      <div class="staple">
+        <h3>Snack – High Protein</h3>
+        <div class="macros">Greek yogurt / cottage cheese / protein shake · ~20–30g protein</div>
+        <button class="btn green" onclick="addDolce('snack')">+ Log Snack</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Manual Meal</h2>
+      <input type="text" id="input-meal" placeholder="Description" />
+      <div style="display:flex;gap:6px">
+        <div style="flex:1"><label>Protein</label><input type="number" id="input-protein" /></div>
+        <div style="flex:1"><label>Calories</label><input type="number" id="input-calories" /></div>
+      </div>
+      <button class="btn green" id="btn-save-meal">Add</button>
+    </div>
+    <div class="card"><h2>Today’s Meals</h2><div id="meals-list"></div></div>
+  </div>
+
+  <!-- SLEEP -->
+  <div id="page-sleep" class="page">
+    <div class="card">
+      <h2>Sleep Quality</h2>
+      <label>Hours slept</label>
+      <input type="number" id="sleep-hours" step="0.1" placeholder="e.g. 7.5" />
+      <label>Quality (1–10)</label>
+      <input type="number" id="sleep-quality" min="1" max="10" placeholder="1-10" />
+      <label>Notes</label>
+      <input type="text" id="sleep-notes" placeholder="Optional" />
+      <button class="btn green" id="btn-save-sleep">Save Sleep</button>
+    </div>
+    <div class="card"><h2>Recent Sleep</h2><div id="sleep-history"></div></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="page-progress" class="page">
+    <div class="card">
+      <h2>Weight</h2>
+      <input type="number" id="input-weight" step="0.1" placeholder="kg" />
+      <button class="btn" id="btn-save-weight">Save Weight</button>
+      <div id="weight-history" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>Measurements (cm)</h2>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1"><label>Waist</label><input type="number" id="m-waist" step="0.1" /></div>
+        <div style="flex:1"><label>Chest</label><input type="number" id="m-chest" step="0.1" /></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1"><label>Arms</label><input type="number" id="m-arms" step="0.1" /></div>
+        <div style="flex:1"><label>Thighs</label><input type="number" id="m-thighs" step="0.1" /></div>
+      </div>
+      <button class="btn secondary" id="btn-save-meas">Save</button>
+    </div>
+    <div class="card">
+      <h2>Goals</h2>
+      <div style="display:flex;gap:6px">
+        <div style="flex:1"><label>Protein Goal</label><input type="number" id="goal-protein" value="200" /></div>
+        <div style="flex:1"><label>Calorie Goal</label><input type="number" id="goal-calories" value="2200" /></div>
+      </div>
+      <button class="btn secondary" id="btn-save-goals">Save Goals</button>
+    </div>
+  </div>
+
+  <!-- RPG / MENTZER -->
+  <div id="page-rpg" class="page">
+    <div class="card">
+      <h2>Your Progress</h2>
+      <div style="font-size:1.4rem;font-weight:700">Level <span id="rpg-level">1</span></div>
+      <div style="font-size:0.9rem;color:var(--muted)"><span id="rpg-points">0</span> total points</div>
+      <div class="level-bar"><div class="fill" id="level-fill" style="width:0%"></div></div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Next level at <span id="next-level-pts">100</span> pts</div>
+    </div>
+    <div class="card">
+      <h2>Achievements</h2>
+      <div id="achievements-list"></div>
+    </div>
+    <div class="card">
+      <h2>Mike Mentzer Principles</h2>
+      <div class="principle"><strong>Intensity over volume</strong> – Train to absolute failure.</div>
+      <div class="principle"><strong>One set is enough</strong> when intensity is maximal.</div>
+      <div class="principle"><strong>Low frequency</strong> – Full recovery 4–7+ days.</div>
+      <div class="principle"><strong>Progressive overload</strong> – Add weight or reps.</div>
+      <div class="principle"><strong>Perfect form</strong> – Controlled, strict reps.</div>
+    </div>
+  </div>
+
+  <nav>
+    <button class="active" data-page="today"><span>🏠</span>Today</button>
+    <button data-page="workout"><span>💪</span>Workout</button>
+    <button data-page="nutrition"><span>🥩</span>Nutrition</button>
+    <button data-page="sleep"><span>😴</span>Sleep</button>
+    <button data-page="progress"><span>📊</span>Progress</button>
+    <button data-page="rpg"><span>⚔️</span>RPG</button>
+  </nav>
+
+  <script>
+    const today = () => new Date().toISOString().slice(0,10);
+    const nowHour = () => new Date().getHours() + new Date().getMinutes()/60;
+
+    const STOIC = [
+      {q:"The impediment to action advances action. What stands in the way becomes the way.",a:"Marcus Aurelius"},
+      {q:"We suffer more in imagination than in reality.",a:"Seneca"},
+      {q:"It is not what happens to you, but how you react to it that matters.",a:"Epictetus"},
+      {q:"The best revenge is not to be like your enemy.",a:"Marcus Aurelius"},
+      {q:"No man is free who is not master of himself.",a:"Epictetus"},
+      {q:"Luck is what happens when preparation meets opportunity.",a:"Seneca"}
+    ];
+
+    const ACHIEVEMENTS = [
+      { id: "first_walk", name: "Sweat Suit Starter", desc: "Complete first morning walk", pts: 20 },
+      { id: "protein_day", name: "Protein Hit", desc: "Hit daily protein goal", pts: 25 },
+      { id: "sleep_8", name: "Well Rested", desc: "Sleep 8+ hours with quality 8+", pts: 30 },
+      { id: "gironda_day", name: "Iron Guru Day", desc: "Log both Gironda meals", pts: 40 },
+      { id: "mentzer_session", name: "Heavy Duty", desc: "Complete a Mentzer workout", pts: 35 },
+      { id: "level_5", name: "Rising", desc: "Reach Level 5", pts: 50 }
+    ];
+
+    // Mentzer Heavy Duty templates
+    const MENTZER = {
+      A: {
+        title: "Day A – Chest / Back / Delts",
+        note: "1 working set to absolute failure after warm-ups. Rest 4–7 days before Day B.",
+        exercises: [
+          { name: "Pec Deck or Dumbbell Flyes", sets: "1", reps: "To failure" },
+          { name: "Incline Press (machine or DB)", sets: "1", reps: "To failure" },
+          { name: "Nautilus Pullover or Straight-Arm Pulldown", sets: "1", reps: "To failure" },
+          { name: "Close-Grip Pulldown or Row", sets: "1", reps: "To failure" },
+          { name: "Lateral Raise", sets: "1", reps: "To failure" }
+        ]
+      },
+      B: {
+        title: "Day B – Legs / Arms",
+        note: "1 working set to absolute failure after warm-ups. Rest 4–7 days before Day A.",
+        exercises: [
+          { name: "Leg Extension", sets: "1", reps: "To failure" },
+          { name: "Leg Press or Squat", sets: "1", reps: "To failure" },
+          { name: "Leg Curl", sets: "1", reps: "To failure" },
+          { name: "Standing Calf Raise", sets: "1–2", reps: "To failure" },
+          { name: "Barbell or Machine Curl", sets: "1", reps: "To failure" },
+          { name: "Tricep Pressdown or Extension", sets: "1", reps: "To failure" }
+        ]
+      }
+    };
+
+    // Simple current program placeholder (can expand later)
+    const CURRENT = {
+      1: { 1: "Day 1 – Chest & Triceps (Phase 1)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      2: { 1: "Day 1 – Chest & Triceps (Phase 1)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      3: { 1: "Day 1 – Chest & Triceps (Phase 2)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      4: { 1: "Day 1 – Chest & Triceps (Phase 2)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" }
+    };
+
+    function loadData() {
+      const raw = localStorage.getItem("trainerDataV3");
+      return raw ? JSON.parse(raw) : {
+        weights: [], meals: [], sleep: [], measurements: [],
+        goals: { protein: 200, calories: 2200 },
+        points: 0, level: 1,
+        quests: {}, achievements: [],
+        lastRefeed: null
+      };
+    }
+    function saveData(d) { localStorage.setItem("trainerDataV3", JSON.stringify(d)); }
+    let data = loadData();
+
+    function addPoints(pts) {
+      data.points += pts;
+      const newLevel = Math.floor(data.points / 100) + 1;
+      if (newLevel > data.level) {
+        data.level = newLevel;
+        alert("Level up! You are now Level " + data.level);
+      }
+      saveData(data);
+      updateHeader();
+      renderRPG();
+    }
+
+    function updateHeader() {
+      document.getElementById("user-level").textContent = data.level;
+      document.getElementById("user-points").textContent = data.points;
+      document.getElementById("today-points").textContent = getTodayPoints();
+    }
+
+    function getTodayPoints() {
+      const q = data.quests[today()] || {};
+      let p = 0;
+      if (q.walk) p += q.walkPts || 15;
+      if (q.train) p += q.trainPts || 25;
+      if (q.meal1) p += 20;
+      if (q.meal2) p += 20;
+      return p;
+    }
+
+    function inWindow(start, end) {
+      const h = nowHour();
+      return h >= start && h <= end;
+    }
+
+    window.completeQuest = function(type) {
+      const key = today();
+      if (!data.quests[key]) data.quests[key] = {};
+      if (data.quests[key][type]) return alert("Already completed today");
+      let pts = 0;
+      if (type === "walk") {
+        pts = 15;
+        if (inWindow(6.5, 8.5)) pts += 10;
+        data.quests[key].walk = true;
+        data.quests[key].walkPts = pts;
+        document.getElementById("quest-walk").classList.add("done");
+        checkAchievement("first_walk");
+      }
+      if (type === "train") {
+        pts = 25;
+        if (inWindow(10, 14)) pts += 10;
+        data.quests[key].train = true;
+        data.quests[key].trainPts = pts;
+        document.getElementById("quest-train").classList.add("done");
+      }
+      addPoints(pts);
+      alert("+" + pts + " points!");
+      saveData(data);
+      updateHeader();
+    };
+
+    function checkAchievement(id) {
+      if (data.achievements.includes(id)) return;
+      const a = ACHIEVEMENTS.find(x => x.id === id);
+      if (!a) return;
+      data.achievements.push(id);
+      addPoints(a.pts);
+      alert("Achievement unlocked: " + a.name + " (+" + a.pts + " pts)");
+      saveData(data);
+      renderRPG();
+    }
+
+    const STAPLES = {
+      gironda1: { meal: "Gironda Meal 1 (6 eggs + 3 pork patties)", protein: 77, calories: 933 },
+      gironda2: { meal: "Gironda Meal 2 (6 eggs + 250g steak)", protein: 93, calories: 952 }
+    };
+
+    const DOLCE = {
+      breakfast: { meal: "Dolce Breakfast (protein + veg)", protein: 40, calories: 350 },
+      lunch: { meal: "Dolce Lunch (lean protein + greens)", protein: 45, calories: 400 },
+      dinner: { meal: "Dolce Dinner (protein + veg)", protein: 50, calories: 450 },
+      snack: { meal: "Dolce Snack (high protein)", protein: 25, calories: 200 }
+    };
+
+    window.addStaple = function(key, fromQuest) {
+      const s = STAPLES[key];
+      data.meals.push({ date: today(), meal: s.meal, protein: s.protein, calories: s.calories, id: Date.now() });
+      const qkey = today();
+      if (!data.quests[qkey]) data.quests[qkey] = {};
+      let pts = 20;
+      if (key === "gironda1") {
+        data.quests[qkey].meal1 = true;
+        if (inWindow(11, 13)) pts += 5;
+        document.getElementById("quest-meal1")?.classList.add("done");
+      }
+      if (key === "gironda2") {
+        data.quests[qkey].meal2 = true;
+        if (inWindow(17, 19.5)) pts += 5;
+        document.getElementById("quest-meal2")?.classList.add("done");
+      }
+      if (data.quests[qkey].meal1 && data.quests[qkey].meal2) checkAchievement("gironda_day");
+      addPoints(pts);
+      saveData(data);
+      renderToday(); renderMeals();
+      alert("Logged + " + pts + " pts");
+    };
+
+    window.addDolce = function(key) {
+      const s = DOLCE[key];
+      data.meals.push({ date: today(), meal: s.meal, protein: s.protein, calories: s.calories, id: Date.now() });
+      addPoints(15);
+      saveData(data);
+      renderToday(); renderMeals();
+      alert("Logged " + s.meal + " +15 pts");
+    };
+
+    function showPage(name) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById("page-" + name).classList.add("active");
+      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+      const btn = document.querySelector(`nav button[data-page="${name}"]`);
+      if (btn) btn.classList.add("active");
+      if (name === "today") renderToday();
+      if (name === "nutrition") { renderMeals(); renderRefeed(); }
+      if (name === "sleep") renderSleep();
+      if (name === "progress") renderProgress();
+      if (name === "rpg") renderRPG();
+    }
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.addEventListener("click", () => showPage(btn.dataset.page));
+    });
+
+    document.getElementById("btn-hc").addEventListener("click", () => {
+      document.body.classList.toggle("high-contrast");
+      const on = document.body.classList.contains("high-contrast");
+      document.getElementById("btn-hc").textContent = on ? "Normal" : "High Contrast";
+      localStorage.setItem("highContrast", on ? "1" : "0");
+    });
+    if (localStorage.getItem("highContrast") === "1") {
+      document.body.classList.add("high-contrast");
+      document.getElementById("btn-hc").textContent = "Normal";
+    }
+
+    const dayIndex = Math.floor(Date.now() / 86400000) % STOIC.length;
+    document.getElementById("stoic-quote").textContent = STOIC[dayIndex].q;
+    document.getElementById("stoic-author").textContent = "— " + STOIC[dayIndex].a;
+
+    // Program selector
+    document.getElementById("select-program").addEventListener("change", function() {
+      const v = this.value;
+      document.getElementById("mentzer-select").style.display = v === "mentzer" ? "block" : "none";
+      document.getElementById("current-select").style.display = v === "current" ? "block" : "none";
+    });
+
+    document.getElementById("btn-load-workout").addEventListener("click", () => {
+      const prog = document.getElementById("select-program").value;
+      const detail = document.getElementById("workout-detail");
+      if (prog === "mentzer") {
+        const day = document.getElementById("select-mentzer-day").value;
+        const w = MENTZER[day];
+        let html = `<div class="card"><h2>${w.title}</h2><p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">${w.note}</p>`;
+        w.exercises.forEach(e => {
+          html += `<div class="exercise"><h3>${e.name}</h3><div class="meta">${e.sets} set · ${e.reps}</div></div>`;
+        });
+        html += `<button class="btn green" onclick="completeMentzer()">Mark Mentzer Session Complete (+35 pts)</button></div>`;
+        detail.innerHTML = html;
+      } else {
+        const week = document.getElementById("select-week").value;
+        const day = document.getElementById("select-day").value;
+        detail.innerHTML = `<div class="card"><h2>${CURRENT[week][day]}</h2>
+          <p style="font-size:0.85rem;color:var(--muted)">Your original 4-week program exercises. Use the written plan for sets/reps. Full interactive logging coming in a later update.</p>
+          <button class="btn green" onclick="completeQuest('train')">Mark Training Complete</button></div>`;
+      }
+    });
+
+    window.completeMentzer = function() {
+      completeQuest("train");
+      checkAchievement("mentzer_session");
+      alert("Mentzer session logged");
+    };
+
+    function renderToday() {
+      const t = today();
+      const w = data.weights.find(x => x.date === t);
+      document.getElementById("today-weight").textContent = w ? w.kg : "—";
+      const meals = data.meals.filter(m => m.date === t);
+      const totalP = meals.reduce((s, m) => s + (m.protein || 0), 0);
+      const totalC = meals.reduce((s, m) => s + (m.calories || 0), 0);
+      document.getElementById("today-protein").textContent = Math.round(totalP);
+      document.getElementById("today-cals").textContent = Math.round(totalC);
+      const pGoal = data.goals.protein || 200;
+      document.getElementById("protein-goal-text").textContent = Math.round(totalP) + " / " + pGoal + "g";
+      document.getElementById("protein-fill").style.width = Math.min(100, (totalP / pGoal) * 100) + "%";
+      if (totalP >= pGoal) checkAchievement("protein_day");
+      updateHeader();
+      const q = data.quests[t] || {};
+      if (q.walk) document.getElementById("quest-walk")?.classList.add("done");
+      if (q.train) document.getElementById("quest-train")?.classList.add("done");
+      if (q.meal1) document.getElementById("quest-meal1")?.classList.add("done");
+      if (q.meal2) document.getElementById("quest-meal2")?.classList.add("done");
+    }
+
+    // Sleep
+    document.getElementById("btn-save-sleep").addEventListener("click", () => {
+      const hours = parseFloat(document.getElementById("sleep-hours").value);
+      const quality = parseInt(document.getElementById("sleep-quality").value);
+      if (!hours || !quality) return alert("Enter hours and quality");
+      data.sleep = data.sleep.filter(s => s.date !== today());
+      data.sleep.push({ date: today(), hours, quality, notes: document.getElementById("sleep-notes").value });
+      let pts = 10;
+      if (quality >= 7) pts += 5;
+      if (quality >= 9) pts += 5;
+      if (hours >= 7.5) pts += 5;
+      addPoints(pts);
+      if (hours >= 8 && quality >= 8) checkAchievement("sleep_8");
+      saveData(data);
+      document.getElementById("sleep-hours").value = "";
+      document.getElementById("sleep-quality").value = "";
+      document.getElementById("sleep-notes").value = "";
+      renderSleep();
+      alert("Sleep logged +" + pts + " pts");
+    });
+    function renderSleep() {
+      const el = document.getElementById("sleep-history");
+      if (!data.sleep.length) { el.innerHTML = '<div class="empty">No sleep logs yet</div>'; return; }
+      el.innerHTML = data.sleep.slice().reverse().slice(0, 10).map(s =>
+        `<div class="history-item"><div><strong>${s.date}</strong><br><span style="color:var(--muted);font-size:0.75rem">${s.hours}h · Quality ${s.quality}/10</span></div></div>`
+      ).join("");
+    }
+
+    // Meals
+    document.getElementById("btn-save-meal").addEventListener("click", () => {
+      const meal = document.getElementById("input-meal").value.trim() || "Meal";
+      const protein = parseFloat(document.getElementById("input-protein").value) || 0;
+      const calories = parseFloat(document.getElementById("input-calories").value) || 0;
+      if (!protein && !calories) return alert("Enter protein or calories");
+      data.meals.push({ date: today(), meal, protein, calories, id: Date.now() });
+      saveData(data);
+      document.getElementById("input-meal").value = "";
+      document.getElementById("input-protein").value = "";
+      document.getElementById("input-calories").value = "";
+      renderMeals(); renderToday();
+    });
+    function renderMeals() {
+      const list = data.meals.filter(m => m.date === today());
+      const el = document.getElementById("meals-list");
+      if (!list.length) { el.innerHTML = '<div class="empty">No meals today</div>'; return; }
+      el.innerHTML = list.map(m =>
+        `<div class="history-item"><div><strong>${m.meal}</strong><br><span style="color:var(--muted);font-size:0.75rem">${m.protein}g P · ${m.calories} kcal</span></div>
+         <button class="btn small secondary" onclick="deleteMeal(${m.id})">✕</button></div>`
+      ).join("");
+    }
+    window.deleteMeal = function(id) {
+      data.meals = data.meals.filter(m => m.id !== id);
+      saveData(data); renderMeals(); renderToday();
+    };
+
+    function renderRefeed() {
+      const el = document.getElementById("refeed-status");
+      if (!data.lastRefeed) { el.innerHTML = '<div class="refeed-banner">No refeed logged — every 4–5 days</div>'; return; }
+      const days = Math.floor((Date.now() - new Date(data.lastRefeed).getTime()) / 86400000);
+      if (days >= 4) el.innerHTML = `<div class="refeed-banner">Refeed recommended (${days} days ago)</div>`;
+      else el.innerHTML = `<p style="font-size:0.8rem;color:var(--muted)">Last refeed: ${data.lastRefeed} (${days}d ago)</p>`;
+    }
+    window.markRefeed = function() { data.lastRefeed = today(); saveData(data); renderRefeed(); alert("Refeed marked"); };
+
+    // Weight & meas
+    document.getElementById("btn-save-weight").addEventListener("click", () => {
+      const kg = parseFloat(document.getElementById("input-weight").value);
+      if (!kg) return alert("Enter weight");
+      data.weights = data.weights.filter(w => w.date !== today());
+      data.weights.push({ date: today(), kg });
+      data.weights.sort((a,b) => a.date.localeCompare(b.date));
+      saveData(data);
+      document.getElementById("input-weight").value = "";
+      renderToday(); renderProgress(); alert("Weight saved");
+    });
+    document.getElementById("btn-save-meas").addEventListener("click", () => {
+      data.measurements = data.measurements.filter(x => x.date !== today());
+      data.measurements.push({
+        date: today(),
+        waist: parseFloat(document.getElementById("m-waist").value) || null,
+        chest: parseFloat(document.getElementById("m-chest").value) || null,
+        arms: parseFloat(document.getElementById("m-arms").value) || null,
+        thighs: parseFloat(document.getElementById("m-thighs").value) || null
+      });
+      saveData(data); alert("Measurements saved");
+    });
+    document.getElementById("btn-save-goals").addEventListener("click", () => {
+      data.goals.protein = parseInt(document.getElementById("goal-protein").value) || 200;
+      data.goals.calories = parseInt(document.getElementById("goal-calories").value) || 2200;
+      saveData(data); renderToday(); alert("Goals saved");
+    });
+    function renderProgress() {
+      document.getElementById("goal-protein").value = data.goals.protein || 200;
+      document.getElementById("goal-calories").value = data.goals.calories || 2200;
+      const wEl = document.getElementById("weight-history");
+      if (!data.weights.length) wEl.innerHTML = '<div class="empty">No entries</div>';
+      else wEl.innerHTML = data.weights.slice().reverse().slice(0,10).map(w =>
+        `<div class="history-item"><span>${w.date}</span><strong>${w.kg} kg</strong></div>`
+      ).join("");
+    }
+
+    function renderRPG() {
+      document.getElementById("rpg-level").textContent = data.level;
+      document.getElementById("rpg-points").textContent = data.points;
+      const next = data.level * 100;
+      document.getElementById("next-level-pts").textContent = next;
+      const pct = ((data.points % 100) / 100) * 100;
+      document.getElementById("level-fill").style.width = pct + "%";
+      if (data.level >= 5) checkAchievement("level_5");
+      const el = document.getElementById("achievements-list");
+      el.innerHTML = ACHIEVEMENTS.map(a => {
+        const unlocked = data.achievements.includes(a.id);
+        return `<div class="principle" style="${unlocked ? 'border-color:var(--green)' : ''}">
+          <strong>${unlocked ? '✓ ' : ''}${a.name}</strong><br>
+          <span style="font-size:0.8rem;color:var(--muted)">${a.desc} · ${a.pts} pts</span>
+        </div>`;
+      }).join("");
+    }
+
+    renderToday();
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  </script>
+</body>
+</html>
