@@ -23,17 +23,17 @@
     header .sub { font-size: 0.7rem; color: var(--muted); }
     .toggle-hc { background: var(--border); color: var(--text); border: 1px solid var(--text); border-radius: 6px; padding: 5px 9px; font-size: 0.7rem; cursor: pointer; }
     nav { display: flex; background: var(--card); border-top: 2px solid var(--border); position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; overflow-x: auto; }
-    nav button { flex: 1; min-width: 56px; background: none; border: none; color: var(--muted); padding: 9px 3px; font-size: 0.6rem; cursor: pointer; }
+    nav button { flex: 1; min-width: 54px; background: none; border: none; color: var(--muted); padding: 9px 3px; font-size: 0.58rem; cursor: pointer; }
     nav button.active { color: var(--accent); }
-    nav button span { display: block; font-size: 1.2rem; margin-bottom: 1px; }
+    nav button span { display: block; font-size: 1.15rem; margin-bottom: 1px; }
     .page { display: none; padding: 12px; }
     .page.active { display: block; }
     .card { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
     .card h2 { font-size: 0.9rem; margin-bottom: 8px; color: var(--accent); }
     .stat-row { display: flex; gap: 6px; margin-bottom: 8px; }
     .stat { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; text-align: center; }
-    .stat .value { font-size: 1.2rem; font-weight: 700; }
-    .stat .label { font-size: 0.6rem; color: var(--muted); margin-top: 1px; }
+    .stat .value { font-size: 1.15rem; font-weight: 700; }
+    .stat .label { font-size: 0.58rem; color: var(--muted); margin-top: 1px; }
     label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 3px; }
     input, select { width: 100%; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 9px 10px; color: var(--text); font-size: 0.95rem; margin-bottom: 8px; }
     button.btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 11px 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 3px; }
@@ -41,10 +41,8 @@
     button.btn.green { background: var(--green); color: #000; }
     button.btn.small { padding: 7px 10px; font-size: 0.8rem; width: auto; }
     button.btn.outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
-    button.btn.purple { background: var(--purple); color: #000; }
     .progress-bar { height: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; margin: 5px 0; }
     .progress-bar .fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.3s; }
-    .progress-bar .fill.orange { background: var(--orange); }
     .staple { background: var(--bg); border: 2px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
     .staple h3 { font-size: 0.9rem; margin-bottom: 3px; }
     .staple .macros { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; }
@@ -60,8 +58,9 @@
     .quest-info { flex: 1; }
     .quest-title { font-weight: 600; font-size: 0.9rem; }
     .quest-meta { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-    .points-badge { background: var(--purple); color: #000; font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 99px; }
-    .time-tip { font-size: 0.75rem; color: var(--orange); margin-top: 4px; }
+    .exercise { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .exercise h3 { font-size: 0.9rem; margin-bottom: 4px; }
+    .exercise .meta { font-size: 0.75rem; color: var(--muted); }
     .level-bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-top: 6px; }
     .level-bar .fill { height: 100%; background: var(--purple); }
   </style>
@@ -94,7 +93,7 @@
       <div class="quest" id="quest-walk">
         <div class="quest-info">
           <div class="quest-title">Morning Sweat-Suit Walk</div>
-          <div class="quest-meta">06:30–08:30 · +15 pts (+10 bonus in window)</div>
+          <div class="quest-meta">06:30–08:30 · +15 pts (+10 bonus)</div>
         </div>
         <button class="btn small green" onclick="completeQuest('walk')">Done</button>
       </div>
@@ -133,33 +132,39 @@
       <div class="quote" id="stoic-quote"></div>
       <div class="quote-author" id="stoic-author"></div>
     </div>
-
-    <div class="card">
-      <h2>Suggested Daily Rhythm</h2>
-      <div class="principle">06:30–08:30 · Morning walk (sweat suit)</div>
-      <div class="principle">10:00–14:00 · Weight training</div>
-      <div class="principle">11:00–13:00 · Meal 1 (eggs + meat)</div>
-      <div class="principle">17:00–19:30 · Meal 2 (eggs + meat)</div>
-      <div class="principle">22:30–23:00 · Lights out target</div>
-    </div>
   </div>
 
-  <!-- SLEEP -->
-  <div id="page-sleep" class="page">
+  <!-- WORKOUT -->
+  <div id="page-workout" class="page">
     <div class="card">
-      <h2>Sleep Quality</h2>
-      <label>Hours slept</label>
-      <input type="number" id="sleep-hours" step="0.1" placeholder="e.g. 7.5" />
-      <label>Quality (1–10)</label>
-      <input type="number" id="sleep-quality" min="1" max="10" placeholder="1-10" />
-      <label>Notes (optional)</label>
-      <input type="text" id="sleep-notes" placeholder="Felt recovered / restless etc." />
-      <button class="btn green" id="btn-save-sleep">Save Sleep</button>
+      <h2>Select Program</h2>
+      <select id="select-program">
+        <option value="current">Current 4-Week Program</option>
+        <option value="mentzer">Mike Mentzer Heavy Duty</option>
+      </select>
+      <div id="mentzer-select" style="display:none">
+        <select id="select-mentzer-day">
+          <option value="A">Day A – Chest / Back / Delts</option>
+          <option value="B">Day B – Legs / Arms</option>
+        </select>
+      </div>
+      <div id="current-select">
+        <select id="select-week">
+          <option value="1">Week 1</option>
+          <option value="2">Week 2</option>
+          <option value="3">Week 3</option>
+          <option value="4">Week 4</option>
+        </select>
+        <select id="select-day">
+          <option value="1">Day 1 – Chest & Triceps</option>
+          <option value="2">Day 2 – Legs</option>
+          <option value="3">Day 3 – Shoulders</option>
+          <option value="4">Day 4 – Back & Biceps</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-load-workout">Load Workout</button>
     </div>
-    <div class="card">
-      <h2>Recent Sleep</h2>
-      <div id="sleep-history"></div>
-    </div>
+    <div id="workout-detail"></div>
   </div>
 
   <!-- NUTRITION -->
@@ -180,6 +185,32 @@
       </div>
       <button class="btn outline" onclick="markRefeed()">Mark Carb Refeed</button>
     </div>
+
+    <div class="card">
+      <h2>Mike Dolce Style Meals</h2>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">Clean, structured, fat-loss focused</p>
+      <div class="staple">
+        <h3>Breakfast – Protein + Veg</h3>
+        <div class="macros">Egg whites / whole eggs + spinach / peppers · ~35–45g protein</div>
+        <button class="btn green" onclick="addDolce('breakfast')">+ Log Breakfast</button>
+      </div>
+      <div class="staple">
+        <h3>Lunch – Lean Protein + Greens</h3>
+        <div class="macros">Chicken / turkey / white fish + large salad · ~40–50g protein</div>
+        <button class="btn green" onclick="addDolce('lunch')">+ Log Lunch</button>
+      </div>
+      <div class="staple">
+        <h3>Dinner – Protein + Veg</h3>
+        <div class="macros">Steak / chicken / fish + broccoli / greens · ~40–55g protein</div>
+        <button class="btn green" onclick="addDolce('dinner')">+ Log Dinner</button>
+      </div>
+      <div class="staple">
+        <h3>Snack – High Protein</h3>
+        <div class="macros">Greek yogurt / cottage cheese / protein shake · ~20–30g protein</div>
+        <button class="btn green" onclick="addDolce('snack')">+ Log Snack</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Manual Meal</h2>
       <input type="text" id="input-meal" placeholder="Description" />
@@ -190,6 +221,21 @@
       <button class="btn green" id="btn-save-meal">Add</button>
     </div>
     <div class="card"><h2>Today’s Meals</h2><div id="meals-list"></div></div>
+  </div>
+
+  <!-- SLEEP -->
+  <div id="page-sleep" class="page">
+    <div class="card">
+      <h2>Sleep Quality</h2>
+      <label>Hours slept</label>
+      <input type="number" id="sleep-hours" step="0.1" placeholder="e.g. 7.5" />
+      <label>Quality (1–10)</label>
+      <input type="number" id="sleep-quality" min="1" max="10" placeholder="1-10" />
+      <label>Notes</label>
+      <input type="text" id="sleep-notes" placeholder="Optional" />
+      <button class="btn green" id="btn-save-sleep">Save Sleep</button>
+    </div>
+    <div class="card"><h2>Recent Sleep</h2><div id="sleep-history"></div></div>
   </div>
 
   <!-- PROGRESS -->
@@ -237,16 +283,17 @@
     </div>
     <div class="card">
       <h2>Mike Mentzer Principles</h2>
-      <div class="principle"><strong>Intensity over volume</strong> – Train to failure.</div>
+      <div class="principle"><strong>Intensity over volume</strong> – Train to absolute failure.</div>
       <div class="principle"><strong>One set is enough</strong> when intensity is maximal.</div>
       <div class="principle"><strong>Low frequency</strong> – Full recovery 4–7+ days.</div>
       <div class="principle"><strong>Progressive overload</strong> – Add weight or reps.</div>
-      <div class="principle"><strong>Perfect form</strong> – Controlled, strict.</div>
+      <div class="principle"><strong>Perfect form</strong> – Controlled, strict reps.</div>
     </div>
   </div>
 
   <nav>
     <button class="active" data-page="today"><span>🏠</span>Today</button>
+    <button data-page="workout"><span>💪</span>Workout</button>
     <button data-page="nutrition"><span>🥩</span>Nutrition</button>
     <button data-page="sleep"><span>😴</span>Sleep</button>
     <button data-page="progress"><span>📊</span>Progress</button>
@@ -268,15 +315,50 @@
 
     const ACHIEVEMENTS = [
       { id: "first_walk", name: "Sweat Suit Starter", desc: "Complete first morning walk", pts: 20 },
-      { id: "walk_streak_3", name: "Walker", desc: "3 morning walks", pts: 30 },
       { id: "protein_day", name: "Protein Hit", desc: "Hit daily protein goal", pts: 25 },
       { id: "sleep_8", name: "Well Rested", desc: "Sleep 8+ hours with quality 8+", pts: 30 },
       { id: "gironda_day", name: "Iron Guru Day", desc: "Log both Gironda meals", pts: 40 },
+      { id: "mentzer_session", name: "Heavy Duty", desc: "Complete a Mentzer workout", pts: 35 },
       { id: "level_5", name: "Rising", desc: "Reach Level 5", pts: 50 }
     ];
 
+    // Mentzer Heavy Duty templates
+    const MENTZER = {
+      A: {
+        title: "Day A – Chest / Back / Delts",
+        note: "1 working set to absolute failure after warm-ups. Rest 4–7 days before Day B.",
+        exercises: [
+          { name: "Pec Deck or Dumbbell Flyes", sets: "1", reps: "To failure" },
+          { name: "Incline Press (machine or DB)", sets: "1", reps: "To failure" },
+          { name: "Nautilus Pullover or Straight-Arm Pulldown", sets: "1", reps: "To failure" },
+          { name: "Close-Grip Pulldown or Row", sets: "1", reps: "To failure" },
+          { name: "Lateral Raise", sets: "1", reps: "To failure" }
+        ]
+      },
+      B: {
+        title: "Day B – Legs / Arms",
+        note: "1 working set to absolute failure after warm-ups. Rest 4–7 days before Day A.",
+        exercises: [
+          { name: "Leg Extension", sets: "1", reps: "To failure" },
+          { name: "Leg Press or Squat", sets: "1", reps: "To failure" },
+          { name: "Leg Curl", sets: "1", reps: "To failure" },
+          { name: "Standing Calf Raise", sets: "1–2", reps: "To failure" },
+          { name: "Barbell or Machine Curl", sets: "1", reps: "To failure" },
+          { name: "Tricep Pressdown or Extension", sets: "1", reps: "To failure" }
+        ]
+      }
+    };
+
+    // Simple current program placeholder (can expand later)
+    const CURRENT = {
+      1: { 1: "Day 1 – Chest & Triceps (Phase 1)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      2: { 1: "Day 1 – Chest & Triceps (Phase 1)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      3: { 1: "Day 1 – Chest & Triceps (Phase 2)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" },
+      4: { 1: "Day 1 – Chest & Triceps (Phase 2)", 2: "Day 2 – Legs", 3: "Day 3 – Shoulders", 4: "Day 4 – Back & Biceps" }
+    };
+
     function loadData() {
-      const raw = localStorage.getItem("trainerDataV2");
+      const raw = localStorage.getItem("trainerDataV3");
       return raw ? JSON.parse(raw) : {
         weights: [], meals: [], sleep: [], measurements: [],
         goals: { protein: 200, calories: 2200 },
@@ -285,10 +367,10 @@
         lastRefeed: null
       };
     }
-    function saveData(d) { localStorage.setItem("trainerDataV2", JSON.stringify(d)); }
+    function saveData(d) { localStorage.setItem("trainerDataV3", JSON.stringify(d)); }
     let data = loadData();
 
-    function addPoints(pts, reason) {
+    function addPoints(pts) {
       data.points += pts;
       const newLevel = Math.floor(data.points / 100) + 1;
       if (newLevel > data.level) {
@@ -307,7 +389,6 @@
     }
 
     function getTodayPoints() {
-      // simple approximation from today's actions stored in quests
       const q = data.quests[today()] || {};
       let p = 0;
       if (q.walk) p += q.walkPts || 15;
@@ -326,7 +407,6 @@
       const key = today();
       if (!data.quests[key]) data.quests[key] = {};
       if (data.quests[key][type]) return alert("Already completed today");
-
       let pts = 0;
       if (type === "walk") {
         pts = 15;
@@ -343,7 +423,7 @@
         data.quests[key].trainPts = pts;
         document.getElementById("quest-train").classList.add("done");
       }
-      addPoints(pts, type);
+      addPoints(pts);
       alert("+" + pts + " points!");
       saveData(data);
       updateHeader();
@@ -354,7 +434,7 @@
       const a = ACHIEVEMENTS.find(x => x.id === id);
       if (!a) return;
       data.achievements.push(id);
-      addPoints(a.pts, a.name);
+      addPoints(a.pts);
       alert("Achievement unlocked: " + a.name + " (+" + a.pts + " pts)");
       saveData(data);
       renderRPG();
@@ -363,6 +443,13 @@
     const STAPLES = {
       gironda1: { meal: "Gironda Meal 1 (6 eggs + 3 pork patties)", protein: 77, calories: 933 },
       gironda2: { meal: "Gironda Meal 2 (6 eggs + 250g steak)", protein: 93, calories: 952 }
+    };
+
+    const DOLCE = {
+      breakfast: { meal: "Dolce Breakfast (protein + veg)", protein: 40, calories: 350 },
+      lunch: { meal: "Dolce Lunch (lean protein + greens)", protein: 45, calories: 400 },
+      dinner: { meal: "Dolce Dinner (protein + veg)", protein: 50, calories: 450 },
+      snack: { meal: "Dolce Snack (high protein)", protein: 25, calories: 200 }
     };
 
     window.addStaple = function(key, fromQuest) {
@@ -382,10 +469,19 @@
         document.getElementById("quest-meal2")?.classList.add("done");
       }
       if (data.quests[qkey].meal1 && data.quests[qkey].meal2) checkAchievement("gironda_day");
-      addPoints(pts, s.meal);
+      addPoints(pts);
       saveData(data);
       renderToday(); renderMeals();
       alert("Logged + " + pts + " pts");
+    };
+
+    window.addDolce = function(key) {
+      const s = DOLCE[key];
+      data.meals.push({ date: today(), meal: s.meal, protein: s.protein, calories: s.calories, id: Date.now() });
+      addPoints(15);
+      saveData(data);
+      renderToday(); renderMeals();
+      alert("Logged " + s.meal + " +15 pts");
     };
 
     function showPage(name) {
@@ -419,6 +515,40 @@
     document.getElementById("stoic-quote").textContent = STOIC[dayIndex].q;
     document.getElementById("stoic-author").textContent = "— " + STOIC[dayIndex].a;
 
+    // Program selector
+    document.getElementById("select-program").addEventListener("change", function() {
+      const v = this.value;
+      document.getElementById("mentzer-select").style.display = v === "mentzer" ? "block" : "none";
+      document.getElementById("current-select").style.display = v === "current" ? "block" : "none";
+    });
+
+    document.getElementById("btn-load-workout").addEventListener("click", () => {
+      const prog = document.getElementById("select-program").value;
+      const detail = document.getElementById("workout-detail");
+      if (prog === "mentzer") {
+        const day = document.getElementById("select-mentzer-day").value;
+        const w = MENTZER[day];
+        let html = `<div class="card"><h2>${w.title}</h2><p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">${w.note}</p>`;
+        w.exercises.forEach(e => {
+          html += `<div class="exercise"><h3>${e.name}</h3><div class="meta">${e.sets} set · ${e.reps}</div></div>`;
+        });
+        html += `<button class="btn green" onclick="completeMentzer()">Mark Mentzer Session Complete (+35 pts)</button></div>`;
+        detail.innerHTML = html;
+      } else {
+        const week = document.getElementById("select-week").value;
+        const day = document.getElementById("select-day").value;
+        detail.innerHTML = `<div class="card"><h2>${CURRENT[week][day]}</h2>
+          <p style="font-size:0.85rem;color:var(--muted)">Your original 4-week program exercises. Use the written plan for sets/reps. Full interactive logging coming in a later update.</p>
+          <button class="btn green" onclick="completeQuest('train')">Mark Training Complete</button></div>`;
+      }
+    });
+
+    window.completeMentzer = function() {
+      completeQuest("train");
+      checkAchievement("mentzer_session");
+      alert("Mentzer session logged");
+    };
+
     function renderToday() {
       const t = today();
       const w = data.weights.find(x => x.date === t);
@@ -433,7 +563,6 @@
       document.getElementById("protein-fill").style.width = Math.min(100, (totalP / pGoal) * 100) + "%";
       if (totalP >= pGoal) checkAchievement("protein_day");
       updateHeader();
-      // mark quests done
       const q = data.quests[t] || {};
       if (q.walk) document.getElementById("quest-walk")?.classList.add("done");
       if (q.train) document.getElementById("quest-train")?.classList.add("done");
@@ -452,7 +581,7 @@
       if (quality >= 7) pts += 5;
       if (quality >= 9) pts += 5;
       if (hours >= 7.5) pts += 5;
-      addPoints(pts, "Sleep");
+      addPoints(pts);
       if (hours >= 8 && quality >= 8) checkAchievement("sleep_8");
       saveData(data);
       document.getElementById("sleep-hours").value = "";
@@ -469,7 +598,7 @@
       ).join("");
     }
 
-    // Meals manual
+    // Meals
     document.getElementById("btn-save-meal").addEventListener("click", () => {
       const meal = document.getElementById("input-meal").value.trim() || "Meal";
       const protein = parseFloat(document.getElementById("input-protein").value) || 0;
