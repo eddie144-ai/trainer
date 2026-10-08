@@ -22,6 +22,20 @@ from __future__ import annotations
 CONTRACTS_FINDER = "https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search?stages=tender&limit=100"
 PCS_NOTICES = "https://api.publiccontractsscotland.gov.uk/v1/Notices?dateFrom={month}&noticeType={ntype}&outputType=0"
 
+# Which PCS notice types carry live open opportunities (vs awards/corrigenda).
+# 2 = OJEU contract notice, 102 = website contract notice, 21/24 = social &
+# concession notices. Awards (3/103/104) are excluded from the opportunity feed.
+PCS_OPPORTUNITY_NOTICE_TYPES = [2, 102, 21, 24]
+
+
+def pcs_fetch_plan(months: list[str], ntypes: list[int] | None = None) -> list[str]:
+    """Build the set of PCS URLs to pull for good live coverage: every
+    opportunity notice type across a rolling window of months (format 'MM-YYYY').
+    A notice posted last month can still be open, so pull >=2 months and filter
+    to open deadlines on normalise."""
+    ntypes = ntypes or PCS_OPPORTUNITY_NOTICE_TYPES
+    return [PCS_NOTICES.format(month=m, ntype=n) for m in months for n in ntypes]
+
 
 def _first_address(release: dict) -> dict:
     for p in (release.get("parties") or []):

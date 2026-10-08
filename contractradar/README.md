@@ -43,6 +43,13 @@ PYTHONPATH=. python3 tests/test_match.py      # 6 tests, all pass
 `radar/sources.py` normalises both feeds to one schema and de-dupes by
 (title, buyer, deadline). Live snapshots are bundled in `data/`.
 
+**Coverage:** the PCS snapshot is built from a rolling window — opportunity
+notice types (contract + website + social/concession) across the current and
+previous month — then filtered to still-open deadlines (`pcs_fetch_plan()`).
+That took the live working set from ~22 (one type, one month) to **194 open
+Scottish contracts**, ~8 of them in the Aberdeen area (NUTS UKM5x). Production
+runs this plan on a schedule and widens the month window as needed.
+
 ## Honest findings from real runs
 
 1. **Scotland barely appears on Contracts Finder** — the 100 most-recent
