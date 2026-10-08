@@ -1,0 +1,20 @@
+# Template: nightly data refresh for ContractRadar (Phase 1 data service).
+# Copy to .github/workflows/ to activate, or replicate as a Supabase scheduled
+# function. Runs the live ingest: fetch PCS + Contracts Finder -> store -> prune.
+name: contractradar-ingest
+on:
+  schedule:
+    - cron: "0 5 * * *"   # 05:00 UTC daily
+  workflow_dispatch: {}
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Run ingest
+        working-directory: contractradar
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}   # Supabase Postgres in prod
+        run: PYTHONPATH=. python3 -m radar.ingest

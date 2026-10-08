@@ -62,6 +62,27 @@ def test_wrong_sector_low():
     print("ok: off-sector scores low", m.score)
 
 
+def test_store_dedup_and_prune():
+    from radar.store import Store
+    from radar import sources
+    rel = {"ocid": "o1", "buyer": {"name": "B"}, "tender": {
+        "title": "Open thing", "tenderPeriod": {"endDate": (NOW + timedelta(days=20)).isoformat()},
+        "classification": {"id": "72000000"}}}
+    closed = {"ocid": "o2", "buyer": {"name": "B"}, "tender": {
+        "title": "Closed thing", "tenderPeriod": {"endDate": (NOW - timedelta(days=5)).isoformat()},
+        "classification": {"id": "45000000"}}}
+    recs = sources.normalize_response({"releases": [rel, closed]}, "pcs")
+    s = Store(":memory:")
+    new, upd = s.upsert_many(recs)
+    assert (new, upd) == (2, 0)
+    new2, upd2 = s.upsert_many(recs)          # idempotent
+    assert new2 == 0 and upd2 == 2
+    assert s.prune_closed(NOW) == 1           # the past-deadline one goes
+    titles = [t.title for t in s.open_tenders()]
+    assert titles == ["Open thing"], titles
+    print("ok: store upserts, dedupes, and prunes closed")
+
+
 def test_keyword_whole_word_only():
     # 'IT' must NOT match inside 'recruitment'. Off-sector + no real keyword -> low.
     t = _t(title="Recruitment services for the council", cpv="79600000",
@@ -78,4 +99,5 @@ if __name__ == "__main__":
     test_wrong_region_penalised_not_zeroed()
     test_wrong_sector_low()
     test_keyword_whole_word_only()
+    test_store_dedup_and_prune()
     print("\nall tests passed")

@@ -18,8 +18,9 @@ Finder carries a country code). In production the fetch is a scheduled
 server-side GET per source; here we normalise a saved raw response.
 """
 from __future__ import annotations
+import json as _json
 
-CONTRACTS_FINDER = "https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search?stages=tender&limit=100"
+CONTRACTS_FINDER ="https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search?stages=tender&limit=100"
 PCS_NOTICES = "https://api.publiccontractsscotland.gov.uk/v1/Notices?dateFrom={month}&noticeType={ntype}&outputType=0"
 
 # Which PCS notice types carry live open opportunities (vs awards/corrigenda).
@@ -59,6 +60,14 @@ def normalize_release(release: dict, source: str) -> dict:
         "country": a.get("countryName"),
         "postcode": a.get("postalCode"),
     }
+    # suitability may be a string, or a structured object/list across feeds —
+    # normalise to short text so it stores cleanly and stays truthy for matching.
+    suitability = t.get("suitability")
+    if suitability is not None and not isinstance(suitability, str):
+        suitability = _json.dumps(suitability, separators=(",", ":"))[:120]
+    val_amt = val.get("amount")
+    if not isinstance(val_amt, (int, float)):
+        val_amt = None
     ocid = release.get("ocid", "")
     if source == "pcs":
         url = f"https://www.publiccontractsscotland.gov.uk/search/show/search_view.aspx?ID={ocid}"
@@ -74,8 +83,8 @@ def normalize_release(release: dict, source: str) -> dict:
         "cpv_desc": cls.get("description"),
         "cpv_additional": addl,
         "category": t.get("mainProcurementCategory"),
-        "suitability": t.get("suitability"),
-        "value_amount": val.get("amount"),
+        "suitability": suitability,
+        "value_amount": val_amt,
         "value_currency": val.get("currency"),
         "deadline": (t.get("tenderPeriod") or {}).get("endDate"),
         "published": t.get("datePublished") or release.get("date"),

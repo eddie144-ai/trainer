@@ -16,11 +16,26 @@ cleanest available: Contracts Finder publishes an open OCDS API.
 ## What runs today (on real data)
 
 ```bash
+# Phase 1 — data service: fetch -> normalise -> store -> prune closed
+PYTHONPATH=. python3 -m radar.ingest            # LIVE fetch (prod); nightly via cron
+PYTHONPATH=. python3 run.py --profile aberdeen_it --db data/contracts.db
+
+# snapshot mode (bundled sample data, no DB)
 PYTHONPATH=. python3 run.py --profile aberdeen_it --source pcs --html site/index.html
 PYTHONPATH=. python3 run.py --profile aberdeen_facilities --source pcs
-PYTHONPATH=. python3 run.py --profile aberdeen_it --source contracts_finder
-PYTHONPATH=. python3 tests/test_match.py      # 6 tests, all pass
+PYTHONPATH=. python3 tests/test_match.py        # 7 tests, all pass
 ```
+
+## Phase 1 — the self-updating data service (built)
+
+- `radar/ingest.py` — fetches live OCDS from PCS (all opportunity notice types,
+  rolling 2-month window) + Contracts Finder, normalises, upserts, prunes closed.
+  LIVE mode uses stdlib HTTPS (no scraper); LOCAL mode replays saved responses.
+- `radar/store.py` — SQLite store (schema maps 1:1 to Supabase Postgres);
+  dedupes by (title, buyer, deadline), idempotent re-ingest, prunes past deadlines.
+- `deploy/ingest-cron.yml` — nightly schedule template (GitHub Actions / Supabase).
+- Verified on real data: 331 raw notices → 257 open in store (192 PCS + 65 CF),
+  re-ingest idempotent.
 
 - **Data:** `data/contracts_snapshot.json` — 100 real tenders pulled live from
   Contracts Finder (OCDS, Open Government Licence v3.0).

@@ -22,7 +22,8 @@ def main() -> None:
     p.add_argument("--profile", default="aberdeen_it")
     p.add_argument("--source", default="pcs", choices=["pcs", "contracts_finder"],
                    help="pcs = Public Contracts Scotland (primary for Scotland)")
-    p.add_argument("--data", default=None, help="override snapshot path")
+    p.add_argument("--data", default=None, help="override snapshot JSON path")
+    p.add_argument("--db", default=None, help="read tenders from a SQLite store instead")
     p.add_argument("--bar", type=int, default=40)
     p.add_argument("--html", default=None, help="also write an HTML page here")
     args = p.parse_args()
@@ -32,9 +33,13 @@ def main() -> None:
         raise SystemExit(f"unknown profile. choose from: {', '.join(profiles)}")
     profile = Profile(**profiles[args.profile])
 
-    snap = args.data or str(ROOT / ("data/pcs_snapshot.json" if args.source == "pcs"
-                                    else "data/contracts_snapshot.json"))
-    tenders = load_snapshot(snap)
+    if args.db:
+        from radar.store import Store
+        tenders = Store(args.db).open_tenders()
+    else:
+        snap = args.data or str(ROOT / ("data/pcs_snapshot.json" if args.source == "pcs"
+                                        else "data/contracts_snapshot.json"))
+        tenders = load_snapshot(snap)
     matches = rank(profile, tenders)
 
     print(digest.text_digest(profile.name, matches, bar=args.bar))
