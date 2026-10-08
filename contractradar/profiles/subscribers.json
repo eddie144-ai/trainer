@@ -1,0 +1,16 @@
+[
+  {
+    "email": "founder@example.co.uk",
+    "profile": {
+      "name": "Granite City Software (Aberdeen IT/software SME)",
+      "cpv_sectors": ["72", "48", "30", "79"],
+      "keywords": ["software", "development", "digital", "website", "system", "data", "cloud", "application", "platform"],
+      "exclude_keywords": ["taxi", "catering", "demolition"],
+      "regions": ["UKM"],
+      "min_value": 5000,
+      "max_value": 1000000,
+      "require_sme_suitable": false,
+      "min_lead_days": 5
+    }
+  }
+]

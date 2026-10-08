@@ -264,7 +264,12 @@ $('#applyMatch').onclick=()=>{matchSectors=[...chipWrap.querySelectorAll('.chip[
   matchOn=true; $('#sort').value='match'; render();};
 $('#clearMatch').onclick=()=>{matchOn=false;matchSectors=[];matchKw=[];$('#mkw').value='';
   chipWrap.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));$('#sort').value='deadline';render();};
-const join=()=>{$('#toggleMatch').scrollIntoView({behavior:'smooth'});
+// At go-live, paste your Stripe Payment Link for the £19/mo founding plan here.
+// Until it's set, the Join button opens the "match to my business" preview so
+// the tool still demonstrates the paid value.
+const STRIPE_LINK="";
+const join=()=>{ if(STRIPE_LINK){ window.location.href=STRIPE_LINK; return; }
+  $('#toggleMatch').scrollIntoView({behavior:'smooth'});
   if($('#matchpanel').hidden)$('#toggleMatch').click();};
 $('#joinTop').onclick=join;
 render();

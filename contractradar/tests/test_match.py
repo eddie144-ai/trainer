@@ -92,6 +92,25 @@ def test_keyword_whole_word_only():
     print("ok: 'IT' does not match inside 'recruitment'")
 
 
+def test_notify_dry_run_builds_digest():
+    from radar import notify
+    tenders = [
+        _t(title="Bespoke software development platform", cpv="72212000",
+           cpv_desc="software", value_amount=60000, region={"nuts": "UKM50"}),
+        _t(title="Grounds maintenance", cpv="77314000", value_amount=20000,
+           region={"nuts": "UKM50"}),
+    ]
+    sub = {"email": "x@y.co.uk", "profile": {
+        "name": "Test IT Ltd", "cpv_sectors": ["72"], "keywords": ["software"],
+        "exclude_keywords": [], "regions": ["UKM"], "min_lead_days": 5}}
+    # matcher ranks; at least the software one should clear the bar
+    d = notify.build_digest(sub, tenders, bar=40)
+    assert d and d["n"] >= 1 and "software" in d["html"].lower()
+    res = notify.run([sub], tenders, dry_run=True)
+    assert res["sent"] == 1 and res["failed"] == 0
+    print("ok: notify builds & dry-run 'sends' a matched digest")
+
+
 if __name__ == "__main__":
     test_sector_and_keyword_match_scores_high()
     test_exclude_keyword_zeroes()
@@ -100,4 +119,5 @@ if __name__ == "__main__":
     test_wrong_sector_low()
     test_keyword_whole_word_only()
     test_store_dedup_and_prune()
+    test_notify_dry_run_builds_digest()
     print("\nall tests passed")
