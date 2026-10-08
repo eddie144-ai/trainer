@@ -73,8 +73,81 @@ def rsi_mean_reversion(s: Series, period: int = 14, buy: float = 30.0,
     return sig
 
 
+def ts_momentum(s: Series, lookback: int = 126) -> list[float]:
+    """Time-series (absolute) momentum: long if price is above its level
+    `lookback` bars ago, else flat. ~126 bars = 6 months. Binary."""
+    c = _closes(s)
+    sig = [0.0] * len(c)
+    for t in range(len(c)):
+        if t < lookback:
+            continue
+        sig[t] = 1.0 if c[t] > c[t - lookback] else 0.0
+    return sig
+
+
+def momentum_12_1(s: Series) -> list[float]:
+    """Classic 12-1 momentum: long if the return from ~12 months ago to ~1
+    month ago is positive (skipping the most recent month). Binary."""
+    c = _closes(s)
+    long_lb, skip = 252, 21
+    sig = [0.0] * len(c)
+    for t in range(len(c)):
+        if t < long_lb:
+            continue
+        past = c[t - long_lb]
+        recent = c[t - skip]
+        sig[t] = 1.0 if recent > past else 0.0
+    return sig
+
+
+def _daily_vol(c: list[float], t: int, lookback: int) -> float | None:
+    if t < lookback:
+        return None
+    rets = [c[i] / c[i - 1] - 1.0 for i in range(t - lookback + 1, t + 1)]
+    mean = sum(rets) / len(rets)
+    var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+    return var ** 0.5
+
+
+def vol_target(s: Series, target_vol: float = 0.15, lookback: int = 20,
+               cap: float = 1.0) -> list[float]:
+    """Volatility targeting: hold an exposure that scales inversely with recent
+    realised volatility, aiming for a constant annualised vol. Continuous in
+    [0, cap]. No leverage (cap=1.0), so calm markets are fully invested and
+    turbulent ones are scaled down. Its whole pitch is better Sharpe / smaller
+    drawdown, not bigger raw return."""
+    c = _closes(s)
+    daily_target = target_vol / (252 ** 0.5)
+    sig = [0.0] * len(c)
+    for t in range(len(c)):
+        dv = _daily_vol(c, t, lookback)
+        if dv is None or dv == 0:
+            continue
+        sig[t] = max(0.0, min(cap, daily_target / dv))
+    return sig
+
+
+def trend_vol_target(s: Series, target_vol: float = 0.15, lookback: int = 20,
+                     trend_lb: int = 200, cap: float = 1.0) -> list[float]:
+    """Vol targeting, but only while price is above its long SMA (trend up).
+    Combines a trend filter with vol scaling. Continuous."""
+    c = _closes(s)
+    vt = vol_target(s, target_vol, lookback, cap)
+    sig = [0.0] * len(c)
+    for t in range(len(c)):
+        if t + 1 < trend_lb:
+            continue
+        sma = sum(c[t + 1 - trend_lb:t + 1]) / trend_lb
+        sig[t] = vt[t] if c[t] >= sma else 0.0
+    return sig
+
+
 REGISTRY = {
     "buy_and_hold": buy_and_hold,
     "sma_crossover": sma_crossover,
     "rsi_mean_reversion": rsi_mean_reversion,
+    "ts_momentum": ts_momentum,
+    "momentum_12_1": momentum_12_1,
+    "vol_target": vol_target,
+    "trend_vol_target": trend_vol_target,
 }

@@ -103,6 +103,45 @@ def overfitting_demo(series, cfg: Config, split: str) -> None:
     print(f"    --> out of sample, the optimised strategy {verdict} buy & hold.")
 
 
+def oos_all(series, cfg: Config, split: str) -> None:
+    """The real generalisation test: every strategy with FIXED (literature-
+    default, not fitted-here) parameters, scored on train vs the unseen test
+    period. An edge you can trust shows a Sharpe above buy-and-hold in BOTH
+    columns. 'test Sharpe' is the number that decides whether a strategy is
+    real or just a nice-looking backtest."""
+    train = series.slice(end=split)
+    test = series.slice(start=split)
+    if len(train) < 250 or len(test) < 150:
+        return
+    print(f"\n=== GENERALISATION: fixed params, train vs TEST (split {split}) ===")
+    bh_tr = run(train, strategies.buy_and_hold(train), "bh", _pure(cfg)).metrics
+    bh_te = run(test, strategies.buy_and_hold(test), "bh", _pure(cfg)).metrics
+    headers = ["strategy", "trainRet", "trainShp", "testRet", "testShp",
+               "testDD", "beats B&H?"]
+    rows = []
+    for name, fn in strategies.REGISTRY.items():
+        use = _pure(cfg) if name == "buy_and_hold" else cfg
+        mtr = run(train, fn(train), name, use).metrics
+        mte = run(test, fn(test), name, use).metrics
+        edge = "yes" if (name != "buy_and_hold" and mte.sharpe > bh_te.sharpe
+                         and mtr.sharpe > bh_tr.sharpe) else ("—" if name != "buy_and_hold" else "(benchmark)")
+        rows.append([
+            name,
+            f"{mtr.total_return*100:,.0f}%", f"{mtr.sharpe:.2f}",
+            f"{mte.total_return*100:,.0f}%", f"{mte.sharpe:.2f}",
+            f"{mte.max_drawdown*100:,.0f}%", edge,
+        ])
+    print(_table(rows, headers))
+    print(f"    buy & hold test: {bh_te.total_return*100:,.0f}% return, "
+          f"Sharpe {bh_te.sharpe:.2f}, maxDD {bh_te.max_drawdown*100:,.0f}%")
+    survivors = [r[0] for r in rows if r[-1] == "yes"]
+    if survivors:
+        print(f"    SURVIVORS (higher Sharpe than B&H in train AND test): "
+              f"{', '.join(survivors)}")
+    else:
+        print("    No strategy beat buy & hold on Sharpe in both periods.")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data", required=True)
@@ -127,6 +166,7 @@ def main() -> None:
     compare(series, cfg, "FULL PERIOD")
     if args.split:
         overfitting_demo(series, cfg, args.split)
+        oos_all(series, cfg, args.split)
 
 
 if __name__ == "__main__":
