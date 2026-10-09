@@ -13,8 +13,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Run ingest
+      - name: Ingest, export, regenerate pages
         working-directory: contractradar
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}   # Supabase Postgres in prod
-        run: PYTHONPATH=. python3 -m radar.ingest
+          DATABASE_URL:   ${{ secrets.DATABASE_URL }}   # Supabase Postgres in prod
+          BIDBEACON_BASE: "https://bidbeacon.co.uk"
+        run: |
+          PYTHONPATH=. python3 -m radar.ingest
+          PYTHONPATH=. python3 -m radar.export
+          PYTHONPATH=. python3 -m radar.seo
+      # then your host redeploys site/ (Vercel/Netlify auto-deploy on push, or an API hook)
