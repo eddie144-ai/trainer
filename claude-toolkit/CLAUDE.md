@@ -70,8 +70,9 @@ claude mcp add firecrawl -e FIRECRAWL_API_KEY=$FIRECRAWL_API_KEY -- npx -y firec
 - **Only one token-saving tool at a time.** Headroom, PonyTail and similar skills all inject context on every prompt and can conflict.
 - **Never commit API keys.** Pass them with `-e` from environment variables; keep them out of `.mcp.json` in git.
 - **Proxies (Headroom, OmniRoute) see all my prompts and code.** Run them locally only.
+- **Don't combine agent orchestration (Ruflo) with tools that can send or post (Composio, Agent Reach).** For multi-step work, use Agent Skills or Claude Code's built-in subagents first.
 - **Before running an install command** that isn't in this file, show it to me and say where it came from.
 
 ## Not yet verified (don't install or recommend)
 
-Output Optimizer, Second-Brain, img2threejs (two competing repos), Agent Reach, Perplexity MCP (package name unconfirmed), Composio (CLI changes often; use composio.dev docs), Creator Graphics, Thumbnail Strategist, YouTube Optimizer, Competitor Intelligence, Video Postmortem, OmniRoute (works, but routes to non-Claude models), Prompt Master (it writes prompts for other AI tools).
+Output Optimizer, Second-Brain, img2threejs (two competing repos), Agent Reach, Perplexity MCP (package name unconfirmed), Composio (CLI changes often; use composio.dev docs), Creator Graphics, Thumbnail Strategist, YouTube Optimizer, Competitor Intelligence, Video Postmortem, OmniRoute (works, but routes to non-Claude models), Prompt Master (it writes prompts for other AI tools), Ruflo (`ruvnet/ruflo`, formerly claude-flow; read this audit first: https://www.reddit.com/r/ClaudeAI/comments/1sckiy8/do_not_install_ruflo_into_your_claude_code/).
