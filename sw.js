@@ -1,6 +1,6 @@
-// Offline cache for Trainer. Bump VERSION whenever index.html or manifest.json changes.
-const VERSION = "grok-v2";
-const FILES = ["./", "./index.html", "./manifest.json"];
+// Offline cache for Trainer. Bump VERSION whenever a file in FILES changes.
+const VERSION = "grok-v3";
+const FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
   // cache: "reload" skips the browser's HTTP cache so a new version never stores stale files.
