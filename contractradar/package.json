@@ -1,0 +1,9 @@
+{
+  "name": "bidbeacon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BidBeacon — matched UK/Scottish public contract alerts for SMEs",
+  "dependencies": {
+    "stripe": "^17.5.0"
+  }
+}

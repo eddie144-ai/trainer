@@ -33,18 +33,26 @@ the only certain cost is the domain (~£10/yr).
 
 ## Your steps (accounts, money, your name — Claude can't do these)
 
-1. **Domain** (~£10/yr). Register `bidbeacon.co.uk` (and `.com` if free) at any
-   registrar. *Why you: it's your money and your asset.*
+1. **Domain** (~£10/yr). Register **`bidbeacon.co.uk`** — checked against Nominet's
+   registry on 2026-10-10 and it's **available**. (`bidbeacon.com` is taken, held
+   since 2017 — don't wait on it; `.co.uk` is right for a Scottish business.)
+   *Why you: it's your money and your asset.*
 2. **Stripe** account (stripe.com). Create a **Product** "BidBeacon Founding" →
    recurring **£19/month** → create a **Payment Link**. Paste that link into
-   `STRIPE_LINK` in `site/bidbeacon.html`. *Why you: Stripe is in your legal
-   name and tied to your bank.*
+   `STRIPE_LINK` in **`site/join.html`**. Then add a **webhook** pointing at
+   `https://bidbeacon.co.uk/api/stripe-webhook` for events
+   `checkout.session.completed`, `invoice.paid`, `customer.subscription.deleted`;
+   copy its signing secret. *Why you: Stripe is in your legal name and tied to
+   your bank.*
 3. **Supabase** project (free). Run `deploy/schema.sql` in its SQL editor. Copy
-   the project URL + service key.
+   the project URL, the **anon** key (goes in `site/join.html`, safe in the
+   browser) and the **service** key (a Vercel secret, never in the browser).
 4. **Resend** account (free 3k emails/mo). Verify your domain for sending, get
    an API key. Set the "from" to `alerts@bidbeacon.co.uk`.
-5. **Host the site** — import this repo to Vercel/Netlify (free), serve
-   `site/`. Point the domain at it.
+5. **Host on Vercel** (free) — import this repo, project root `contractradar/`.
+   `vercel.json` serves `site/` as the static site and runs `api/stripe-webhook.js`
+   as a function. Add Vercel env vars: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+   `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`. Point `bidbeacon.co.uk` at it.
 6. **GitHub Actions** — copy `deploy/ingest-cron.yml` and `deploy/digest-cron.yml`
    into `.github/workflows/`, and add repo secrets: `DATABASE_URL`,
    `SUPABASE_URL`, `SUPABASE_KEY`, `RESEND_API_KEY`.
@@ -53,16 +61,27 @@ the only certain cost is the domain (~£10/yr).
    test subscriber (yourself) to confirm an email arrives. Only then let the
    schedule run.
 
-## Still to wire after first customers (not needed to launch)
+## Signup + billing: now built (just add your keys)
 
-- **Stripe webhook → subscriber row.** At launch you can add the first few
-  members to `profiles/subscribers.json` (or the Supabase table) by hand after
-  they pay — fine for the first handful. Automate the webhook once volume
-  justifies it.
-- **Profile form** so members pick their own sectors/keywords (a small Supabase
-  insert). Until then, set their profile when you add them.
-- **Compliance** (from the launch plan): ICO registration (~£40–60/yr),
-  privacy policy + one-click unsubscribe, keep the OGL attribution in the footer.
+- **Signup form** — `site/join.html`: members pick sectors/region/keywords; it
+  saves a `pending` subscriber to Supabase and sends them to Stripe. Fill its
+  three config constants (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `STRIPE_LINK`).
+- **Stripe webhook** — `api/stripe-webhook.js`: flips the subscriber to `active`
+  on payment and `canceled` when the subscription ends. Verifies the Stripe
+  signature. Needs the env vars in step 5.
+- So the loop is automatic: join → pay → active → nightly matched digests →
+  cancel → stop. No manual subscriber editing required.
+
+> Not deploy-validated here (this sandbox can't run Vercel/Stripe). Do one real
+> test checkout with Stripe in **test mode** first, confirm the webhook flips the
+> row to `active`, then switch to live keys.
+
+## Compliance (do before taking real payments)
+
+- **ICO registration** (~£40–60/yr) — you're a UK data controller.
+- Fill the placeholders in `content/legal/privacy.md` and `terms.md` (your name,
+  address, dates), regenerate, and keep the one-click unsubscribe + OGL
+  attribution.
 
 ## Costs recap
 

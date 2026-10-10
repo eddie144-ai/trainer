@@ -276,9 +276,7 @@ $('#clearMatch').onclick=()=>{matchOn=false;matchSectors=[];matchKw=[];$('#mkw')
 // Until it's set, the Join button opens the "match to my business" preview so
 // the tool still demonstrates the paid value.
 const STRIPE_LINK="";
-const join=()=>{ if(STRIPE_LINK){ window.location.href=STRIPE_LINK; return; }
-  $('#toggleMatch').scrollIntoView({behavior:'smooth'});
-  if($('#matchpanel').hidden)$('#toggleMatch').click();};
+const join=()=>{ window.location.href="join.html"; };
 $('#joinTop').onclick=join;
 render();
 </script>
